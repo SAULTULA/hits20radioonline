@@ -1,0 +1,41 @@
+:root {
+  --color-primary: #ff0055;
+  --color-secondary: #00f0ff;
+  --color-background-start: #0a0a0a;
+  --color-background-end: #1a1a2e;
+  --color-surface: rgba(255, 255, 255, 0.05);
+  --color-surface-hover: rgba(255, 255, 255, 0.1);
+  --color-text-primary: #ffffff;
+  --color-text-secondary: rgba(255, 255, 255, 0.7);
+
+  --font-family-base: 'Outfit', system-ui, sans-serif;
+  
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2.5rem;
+
+  --border-radius-sm: 8px;
+  --border-radius-md: 16px;
+  --border-radius-lg: 24px;
+  --border-radius-full: 50%;
+
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family-base);
+  background: var(--color-background-start);
+  background: radial-gradient(circle at center, var(--color-background-end) 0%, var(--color-background-start) 100%);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-width=1.0" />
+  <meta name="description" content="Reproductor Premium - Hits20 Radio Online" />
+  <meta name="theme-color" content="#ff0055" />
+  <title>Hits20 Radio Online | En Vivo</title>
+
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <link rel="stylesheet" href="./variables.css" />
+  <link rel="stylesheet" href="./styles.css?v=3" />
+</head>
+
+<body>
+
+  <div class="bg-mesh">
+    <div class="bg-mesh__blob bg-mesh__blob--1"></div>
+    <div class="bg-mesh__blob bg-mesh__blob--2"></div>
+  </div>
+
+  <div class="container">
+
+    <header class="top-bar">
+      <button id="install-button" class="btn-install" style="display: none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Instalar App
+      </button>
+    </header>
+
+    <div class="layout">
+
+      <!-- COLUMNA IZQUIERDA -->
+      <main class="layout__main">
+
+        <!-- LOGO PRINCIPAL (Logo.png) -->
+        <div class="main-logo-container">
+          <img src="./Logo.png" alt="Logo de Radio 20hits" class="main-logo-img">
+        </div>
+
+        <!-- REPRODUCTOR DE AUDIO CUSTOM -->
+        <section class="glass-panel player-card">
+          <div class="player-card__inner">
+
+            <div class="player-card__artwork">
+              <div class="visualizer" id="visualizer">
+                <div class="visualizer__bar"></div>
+                <div class="visualizer__bar"></div>
+                <div class="visualizer__bar"></div>
+                <div class="visualizer__bar"></div>
+                <div class="visualizer__bar"></div>
+              </div>
+              <div class="player-card__ring"></div>
+            </div>
+
+            <div class="player-card__info">
+              <div class="live-badge">
+                <span class="live-badge__dot"></span>
+                TRANSMISIÓN EN VIVO
+              </div>
+              <h2 class="player-card__title">Hits20 Radio Online</h2>
+              <p class="player-card__subtitle">La mejor música, las 24 horas</p>
+            </div>
+
+            <button class="player-card__btn" id="custom-play-btn" aria-label="Reproducir">
+              <svg id="icon-play" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              <svg id="icon-pause" width="32" height="32" viewBox="0 0 24 24" fill="currentColor"
+                style="display: none;">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+              </svg>
+            </button>
+
+            <div class="volume-wrapper" style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+              <input type="range" id="vol-slider" class="volume-slider" min="0" max="1" step="0.01" value="0.5">
+              <span id="volume-label"
+                style="font-weight: 800; color: var(--color-primary); font-size: 0.9rem;">50%</span>
+            </div>
+
+            <audio id="real-audio" src="https://stream.radiosmundiales.com/stream/claudio/;" preload="auto"
+              autoplay></audio>
+          </div>
+        </section>
+
+        <!-- NOTICIAS -->
+        <section class="news">
+          <div class="news__header">
+            <h2 class="news__title">Últimas Noticias</h2>
+            <div class="news__line"></div>
+          </div>
+          <div class="news__grid" id="news-grid">
+            <p style="color: var(--color-text-secondary)">Sintonizando noticias del mundo...</p>
+          </div>
+
+
+
+          <!-- (News reader moved below) -->
+        </section>
+
+      </main>
+
+      <!-- COLUMNA DERECHA -->
+      <aside class="layout__sidebar sidebar">
+
+        <div class="glass-panel sidebar__widget" style="flex-direction: column; align-items: center;">
+          <div id="live-clock-audiencia"
+            style="background: transparent; color: #fff; padding: 5px; font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; letter-spacing: 2px;">
+            00:00:00</div>
+          <h3
+            style="margin: 0 0 15px 0; font-size: 1.2rem; color: #fff; letter-spacing: 2px; text-transform: uppercase; font-weight: 800; text-align: center; width: 100%;">
+            AUDIENCIA GLOBAL</h3>
+          <iframe src="https://gente-de-medios.vercel.app/widget?id=hits20radioonlinecom" width="280" height="480"
+            frameborder="0" scrolling="no" class="sidebar__iframe" title="Widget de Visitas">
+          </iframe>
+          
+
+
+          <!-- PUBLIS -->
+          <div style="display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 20px;">
+            <a href="https://mulahost.com" target="_blank" style="display: block; background: linear-gradient(45deg, #1a1a2e, #16213e); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; text-align: center; text-decoration: none; color: #fff; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='var(--color-primary)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(255,255,255,0.1)';">
+              <span style="display: block; font-weight: 900; font-size: 1rem; color: #00e5ff; letter-spacing: 1px;">Mulahost.com</span>
+              <span style="font-size: 0.75rem; color: var(--color-text-secondary); text-transform: uppercase; font-weight: bold;">Servicios de Hosting</span>
+            </a>
+            
+            <a href="https://ksmservicios.vercel.app/" target="_blank" style="display: block; background: linear-gradient(45deg, #1a1a2e, #16213e); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; text-align: center; text-decoration: none; color: #fff; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='var(--color-primary)';" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(255,255,255,0.1)';">
+              <span style="display: block; font-weight: 900; font-size: 1rem; color: var(--color-primary); letter-spacing: 1px;">¿Quieres tu web?</span>
+              <span style="font-size: 0.75rem; color: var(--color-text-secondary); text-transform: uppercase; font-weight: bold;">Diseño Web</span>
+            </a>
+          </div>
+          <div
+            style="display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.5; pointer-events: none; margin-top: 15px;">
+            <img src="./ksm.png" alt="KSM" style="width: 70px; border-radius: 10px;" onerror="this.src='./ksm.png'">
+            <span style="color: #fff; font-size: 11px; font-weight: 800; letter-spacing: 2px; margin-top: 5px;">© KSM
+              SERVICIOS</span>
+          </div>
+        </div>
+
+        <div class="glass-panel contact-widget">
+          <h3 class="contact-widget__title">Conecta con Nosotros</h3>
+          <p class="contact-widget__desc">Síguenos en nuestras redes sociales y mantente al tanto de la mejor
+            programación de hits20online. San Luis Argentina <img src="https://flagcdn.com/w20/ar.png" alt="Argentina" style="width: 16px; vertical-align: middle; margin-left: 2px;"></p>
+
+          <div class="social" style="display: flex; gap: 15px; justify-content: center; margin-bottom: 20px;">
+            <a href="https://www.facebook.com/hits20radio/" target="_blank" class="social__link" aria-label="Facebook"
+              style="color: #fff; background: rgba(255,255,255,0.1); width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 50%; text-decoration: none; font-size: 1.4rem; transition: all 0.3s;"
+              onmouseover="this.style.background='#1877f2'; this.style.transform='scale(1.1)';"
+              onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='scale(1)';"><i
+                class="fab fa-facebook-f"></i></a>
+            <a href="https://www.youtube.com/@hits20radio" target="_blank" class="social__link" aria-label="YouTube"
+              style="color: #fff; background: rgba(255,255,255,0.1); width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 50%; text-decoration: none; font-size: 1.4rem; transition: all 0.3s;"
+              onmouseover="this.style.background='#ff0000'; this.style.transform='scale(1.1)';"
+              onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='scale(1)';"><i
+                class="fab fa-youtube"></i></a>
+            <a href="https://www.instagram.com/hits20online/" target="_blank" class="social__link"
+              aria-label="Instagram"
+              style="color: #fff; background: rgba(255,255,255,0.1); width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 50%; text-decoration: none; font-size: 1.4rem; transition: all 0.3s;"
+              onmouseover="this.style.background='#e1306c'; this.style.transform='scale(1.1)';"
+              onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='scale(1)';"><i
+                class="fab fa-instagram"></i></a>
+            <a href="https://wa.me/5492664728261" target="_blank" class="social__link" aria-label="WhatsApp"
+              style="color: #fff; background: rgba(255,255,255,0.1); width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 50%; text-decoration: none; font-size: 1.4rem; transition: all 0.3s;"
+              onmouseover="this.style.background='#25D366'; this.style.transform='scale(1.1)';"
+              onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='scale(1)';"><i
+                class="fab fa-whatsapp"></i></a>
+            <a href="https://www.tiktok.com/@hits20online?_r=1&_t=ZS-980S8qdbZa9" target="_blank" class="social__link"
+              aria-label="TikTok"
+              style="color: #fff; background: rgba(255,255,255,0.1); width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 50%; text-decoration: none; font-size: 1.4rem; transition: all 0.3s;"
+              onmouseover="this.style.background='#ff0050'; this.style.transform='scale(1.1)';"
+              onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='scale(1)';"><i
+                class="fab fa-tiktok"></i></a>
+          </div>
+
+          <div class="contact-widget__info">
+            <p><strong>WhatsApp:</strong> +54 9 266 472-8261</p>
+          </div>
+
+          <button onclick="document.getElementById('install-button').click()"
+            style="background: #00e5ff; color: #001155; border: none; padding: 12px 20px; min-height: 60px; border-radius: 50px; font-weight: bold; font-size: 1rem; cursor: pointer; width: 100%; box-shadow: 0 5px 15px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 15px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Instalar App
+          </button>
+        </div>
+
+      </aside>
+    </div> <!-- END LAYOUT -->
+
+    <!-- FOOTER COPYRIGHT -->
+    <footer style="margin-top: 30px; padding: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.6;">
+      <p style="margin: 0;">© 2026 @ksmservicios - Desarrollo y diseño web.</p>
+      <p style="margin: 5px 0 0 0;">© 2026 @Hits20RadioOnline - Todos los derechos de imagen y emisión reservados.</p>
+    </footer>
+
+    <!-- IN-APP NEWS READER (FULL WIDTH) -->
+    <section class="card-news-reader" id="news-reader" style="display: none; width: 90%; margin: 30px auto;">
+      <div class="reader-header">
+        <button class="back-btn" id="btn-back-news">← Cerrar Noticia</button>
+      </div>
+      <div class="reader-body">
+        <img id="news-img" src="" alt="Noticia" style="display: none;">
+        <h2 id="news-title">Cargando...</h2>
+        <div id="news-content">Contenido...</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const audio = document.getElementById('real-audio');
+    const playBtn = document.getElementById('custom-play-btn');
+    const iconPlay = document.getElementById('icon-play');
+    const iconPause = document.getElementById('icon-pause');
+    const visualizer = document.getElementById('visualizer');
+    audio.volume = 0.5;
+
+    let isPlaying = true; // AutoPlay assumption
+
+    const volSlider = document.getElementById('vol-slider');
+    const volLabel = document.getElementById('volume-label');
+
+    volSlider.addEventListener('input', (e) => {
+      const newVol = e.target.value;
+      audio.volume = newVol;
+      volLabel.textContent = Math.round(newVol * 100) + '%';
+
+      // LATIDO DYNAMIC INTENSITY
+      document.documentElement.style.setProperty('--pulse-intensity', newVol);
+    });
+
+    // To handle initial visual state for autoplay:
+    iconPlay.style.display = 'none';
+    iconPause.style.display = 'block';
+    visualizer.classList.add('active');
+
+    // Reloj
+    function updateClock() {
+      const clockEl = document.getElementById('live-clock-audiencia');
+      if (clockEl) {
+        const now = new Date();
+        clockEl.textContent =
+          String(now.getHours()).padStart(2, '0') + ':' +
+          String(now.getMinutes()).padStart(2, '0') + ':' +
+          String(now.getSeconds()).padStart(2, '0');
+      }
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // News system we catch if autoplay was blocked by browser
+    audio.play().catch(() => {
+      isPlaying = false;
+      iconPause.style.display = 'none';
+      iconPlay.style.display = 'block';
+      visualizer.classList.remove('active');
+    });
+
+    playBtn.addEventListener('click', () => {
+      if (isPlaying) {
+        audio.pause();
+        iconPause.style.display = 'none';
+        iconPlay.style.display = 'block';
+        visualizer.classList.remove('active');
+        isPlaying = false;
+      } else {
+        audio.play().then(() => {
+          iconPlay.style.display = 'none';
+          iconPause.style.display = 'block';
+          visualizer.classList.add('active');
+          isPlaying = true;
+        }).catch(err => {
+          console.error("Error reproduciendo audio:", err);
+          alert("No se pudo iniciar el audio. Verifica tu conexión.");
+        });
+      }
+    });
+
+    let newsData = [];
+    const sourceNames = {
+      'minutouno.com': 'Minuto Uno',
+      'clarin.com': 'Clarín',
+      'tn.com.ar': 'TN',
+      'cnnespanol.cnn.com': 'CNN Español',
+      'elchorrillero.com': 'El Chorrillero',
+      'agenciasanluis.com': 'Agencia San Luis'
+    };
+
+    function getSourceName(url) {
+      for (const key in sourceNames) {
+        if (url.includes(key)) return sourceNames[key];
+      }
+      return 'Noticias';
+    }
+
+    async function cargarNoticias() {
+      const grid = document.getElementById('news-grid');
+      const sources = [
+        'https://www.minutouno.com/rss.xml',
+        'https://www.clarin.com/rss/lo-ultimo/',
+        'https://tn.com.ar/rss.xml',
+        'https://cnnespanol.cnn.com/feed/',
+        'https://elchorrillero.com/feed/',
+        'https://agenciasanluis.com/feed/'
+      ];
+
+      grid.innerHTML = '<p style="color: var(--color-text-secondary)">Sintonizando noticias del mundo...</p>';
+      newsData = [];
+
+      // Fetch todas las fuentes en paralelo con timeout de 8 segundos
+      const fetches = sources.map(url => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        return fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(url), { signal: controller.signal })
+          .then(res => res.json())
+          .then(data => { clearTimeout(timeout); return { url, data }; })
+          .catch(() => ({ url, data: null }));
+      });
+
+      const results = await Promise.all(fetches);
+
+      // Separar fuentes que respondieron de las que fallaron
+      const working = results.filter(({ data }) => data && data.status === 'ok' && data.items && data.items.length > 0);
+      const failed = results.filter(({ data }) => !data || data.status !== 'ok' || !data.items || data.items.length === 0);
+
+      if (working.length === 0) {
+        grid.innerHTML = '<p style="color:red">No se pudieron cargar las noticias. Intenta de nuevo más tarde.</p>';
+        return;
+      }
+
+      // Primero: 2 noticias de cada fuente que respondió
+      working.forEach(({ url, data }) => {
+        data.items.slice(0, 2).forEach(item => {
+          newsData.push({ ...item, _sourceName: getSourceName(url) });
+        });
+      });
+
+      // Si alguna fuente falló, rellena con más noticias de las que sí funcionan
+      if (failed.length > 0) {
+        const extras = [];
+        working.forEach(({ url, data }) => {
+          data.items.slice(2, 4).forEach(item => {
+            extras.push({ ...item, _sourceName: getSourceName(url) });
+          });
+        });
+        // Agregar extras hasta completar 12 tarjetas máximo
+        const needed = failed.length * 2;
+        extras.slice(0, needed).forEach(item => newsData.push(item));
+      }
+
+      // Mezclar para no mostrar siempre el mismo orden
+      newsData = newsData.sort(() => Math.random() - 0.5).slice(0, 6);
+
+      grid.innerHTML = '';
+      newsData.forEach((item, idx) => {
+        let imgUrl = item.thumbnail || (item.enclosure && item.enclosure.link) || 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80';
+        grid.innerHTML += `
+          <div class="news-card" style="animation-delay: ${idx * 0.1}s; cursor: pointer;" onclick="openNews(${idx})">
+            <div class="news-card__img-container">
+              <img src="${imgUrl}" alt="Noticia" class="news-card__image" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1585829365295-ab7cd400c167?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80'">
+              <div class="news-card__overlay">Leer más</div>
+            </div>
+            <div class="news-card__content">
+              <span style="font-size:0.65rem; color:var(--color-primary); font-weight:700; text-transform:uppercase; letter-spacing:1px;">${item._sourceName}</span>
+              <h3 class="news-card__title">${item.title}</h3>
+            </div>
+          </div>`;
+      });
+    }
+    cargarNoticias();
+
+
+    function openNews(idx) {
+      const item = newsData[idx];
+      document.getElementById('news-title').innerText = item.title;
+
+      const bodyEl = document.getElementById('news-content');
+      bodyEl.innerHTML = `<iframe src="${item.link}" style="width:100%; height:75vh; border:none; border-radius:15px; background:#fff;"></iframe>`;
+
+      document.getElementById('news-img').style.display = 'none';
+
+      document.getElementById('news-reader').style.display = 'flex';
+      setTimeout(() => {
+        document.getElementById('news-reader').scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+
+    document.getElementById('btn-back-news').onclick = () => {
+      document.getElementById('news-reader').style.display = 'none';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+    }
+    let deferredPrompt;
+    const installBtn = document.getElementById('install-button');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'flex';
+    });
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        installBtn.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+
+</html>
