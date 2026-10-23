@@ -354,41 +354,58 @@
       }
     }
 
-    // Sistema de proxies CORS en cascada: intenta cada proxy hasta obtener respuesta válida
-    const CORS_PROXIES = [
-      (url) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-      (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-      (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
-    ];
-
-    async function fetchWithProxy(proxyFn, rssUrl) {
+    // Sistema de proxies RSS en cascada — 4 estrategias, sin corsproxy.io que bloquea desde GH Pages
+    // Estrategia 1: allorigins (JSON → .contents = XML string)
+    async function tryAllOrigins(rssUrl) {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 8000);
       try {
-        const res = await fetch(proxyFn(rssUrl), { signal: controller.signal });
+        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`, { signal: controller.signal });
         clearTimeout(timeout);
-        if (!res.ok) return null;
-        const contentType = res.headers.get('content-type') || '';
-        // allorigins devuelve JSON con .contents; los demás devuelven XML directo
-        if (contentType.includes('json')) {
-          const json = await res.json();
-          return json.contents || null;
-        } else {
-          return await res.text();
-        }
-      } catch (e) {
+        if (!res.ok) return [];
+        const json = await res.json();
+        return json.contents ? parseRSS(json.contents) : [];
+      } catch (e) { clearTimeout(timeout); return []; }
+    }
+
+    // Estrategia 2: rss2json (API dedicada a RSS → devuelve items JSON directamente)
+    async function tryRss2Json(rssUrl) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      try {
+        const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=5`, { signal: controller.signal });
         clearTimeout(timeout);
-        return null;
-      }
+        if (!res.ok) return [];
+        const json = await res.json();
+        if (json.status !== 'ok' || !json.items) return [];
+        return json.items.map(item => ({
+          title: item.title?.trim() || 'Sin título',
+          link: item.link || '#',
+          thumbnail: item.thumbnail || item.enclosure?.link || '',
+          pubDate: item.pubDate || ''
+        })).filter(item => item.title && item.link && item.link !== '#');
+      } catch (e) { clearTimeout(timeout); return []; }
+    }
+
+    // Estrategia 3: codetabs (proxy HTTP directo → devuelve XML crudo)
+    async function tryCodeTabs(rssUrl) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      try {
+        const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rssUrl)}`, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (!res.ok) return [];
+        const text = await res.text();
+        return parseRSS(text);
+      } catch (e) { clearTimeout(timeout); return []; }
     }
 
     async function fetchRSS(rssUrl) {
-      for (const proxyFn of CORS_PROXIES) {
-        const xmlText = await fetchWithProxy(proxyFn, rssUrl);
-        if (xmlText && xmlText.trim().length > 0) {
-          const items = parseRSS(xmlText);
-          if (items.length > 0) return items;
-        }
+      // Intenta cada estrategia en orden hasta obtener items
+      const strategies = [tryAllOrigins, tryRss2Json, tryCodeTabs];
+      for (const strategy of strategies) {
+        const items = await strategy(rssUrl);
+        if (items.length > 0) return items;
       }
       return [];
     }
