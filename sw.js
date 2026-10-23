@@ -1,4 +1,4 @@
-const CACHE_NAME = 'radio-hits2o-v3';
+const CACHE_NAME = 'radio-hits2o-v4';
 const urlsToCache = [
   './index.html',
   './styles.css',
@@ -28,6 +28,21 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  // Ignorar las peticiones al stream de audio
+  if (event.request.url.includes('condoristream.com') || event.request.url.includes('radiosmundiales.com')) {
+    return;
+  }
+
+  // Para el HTML (navegación), intentamos ir a la red primero para siempre tener la última versión,
+  // y si falla (sin internet), recurrimos a la caché.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Para el resto (CSS, imágenes, JS), usamos Caché primero, y si no está, vamos a la red.
   event.respondWith(
     caches.match(event.request)
       .then(response => {
