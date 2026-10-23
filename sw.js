@@ -28,8 +28,9 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Ignorar las peticiones al stream de audio
-  if (event.request.url.includes('condoristream.com') || event.request.url.includes('radiosmundiales.com')) {
+  // Ignorar peticiones externas: audio stream, proxy CORS de noticias y APIs de terceros
+  const externalDomains = ['condoristream.com', 'radiosmundiales.com', 'allorigins.win', 'flagcdn.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
+  if (externalDomains.some(domain => event.request.url.includes(domain))) {
     return;
   }
 

@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-width=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Reproductor Premium - Hits20 Radio Online" />
   <meta name="theme-color" content="#ff0055" />
   <title>Hits20 Radio Online | En Vivo</title>
@@ -316,6 +316,48 @@
       return 'Noticias';
     }
 
+    // Parsea un XML de RSS y devuelve array de items
+    function parseRSS(xmlText) {
+      try {
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(xmlText, 'text/xml');
+        const items = Array.from(xml.querySelectorAll('item'));
+        return items.map(item => {
+          const enclosureEl = item.querySelector('enclosure');
+          const mediaEl = item.querySelector('thumbnail') || item.querySelector('content');
+          const thumbnail =
+            (enclosureEl && enclosureEl.getAttribute('url')) ||
+            (mediaEl && (mediaEl.getAttribute('url') || mediaEl.textContent)) ||
+            '';
+          return {
+            title: item.querySelector('title')?.textContent?.trim() || 'Sin título',
+            link: item.querySelector('link')?.textContent?.trim() || '#',
+            thumbnail,
+            pubDate: item.querySelector('pubDate')?.textContent?.trim() || ''
+          };
+        }).filter(item => item.title && item.link && item.link !== '#');
+      } catch (e) {
+        return [];
+      }
+    }
+
+    // Usa allorigins.win como proxy CORS para obtener el RSS sin restricciones
+    async function fetchRSS(rssUrl) {
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      try {
+        const res = await fetch(proxyUrl, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (!res.ok) return [];
+        const json = await res.json();
+        return parseRSS(json.contents);
+      } catch (e) {
+        clearTimeout(timeout);
+        return [];
+      }
+    }
+
     async function cargarNoticias() {
       const grid = document.getElementById('news-grid');
       const sources = [
@@ -330,21 +372,16 @@
       grid.innerHTML = '<p style="color: var(--color-text-secondary)">Sintonizando noticias del mundo...</p>';
       newsData = [];
 
-      // Fetch todas las fuentes en paralelo con timeout de 8 segundos
-      const fetches = sources.map(url => {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 8000);
-        return fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(url), { signal: controller.signal })
-          .then(res => res.json())
-          .then(data => { clearTimeout(timeout); return { url, data }; })
-          .catch(() => ({ url, data: null }));
-      });
+      // Fetch todas las fuentes en paralelo via proxy CORS
+      const results = await Promise.all(
+        sources.map(async url => {
+          const items = await fetchRSS(url);
+          return { url, items };
+        })
+      );
 
-      const results = await Promise.all(fetches);
-
-      // Separar fuentes que respondieron de las que fallaron
-      const working = results.filter(({ data }) => data && data.status === 'ok' && data.items && data.items.length > 0);
-      const failed = results.filter(({ data }) => !data || data.status !== 'ok' || !data.items || data.items.length === 0);
+      const working = results.filter(({ items }) => items.length > 0);
+      const failed = results.filter(({ items }) => items.length === 0);
 
       if (working.length === 0) {
         grid.innerHTML = '<p style="color:red">No se pudieron cargar las noticias. Intenta de nuevo más tarde.</p>';
@@ -352,8 +389,8 @@
       }
 
       // Primero: 2 noticias de cada fuente que respondió
-      working.forEach(({ url, data }) => {
-        data.items.slice(0, 2).forEach(item => {
+      working.forEach(({ url, items }) => {
+        items.slice(0, 2).forEach(item => {
           newsData.push({ ...item, _sourceName: getSourceName(url) });
         });
       });
@@ -361,12 +398,11 @@
       // Si alguna fuente falló, rellena con más noticias de las que sí funcionan
       if (failed.length > 0) {
         const extras = [];
-        working.forEach(({ url, data }) => {
-          data.items.slice(2, 4).forEach(item => {
+        working.forEach(({ url, items }) => {
+          items.slice(2, 4).forEach(item => {
             extras.push({ ...item, _sourceName: getSourceName(url) });
           });
         });
-        // Agregar extras hasta completar 12 tarjetas máximo
         const needed = failed.length * 2;
         extras.slice(0, needed).forEach(item => newsData.push(item));
       }
@@ -376,7 +412,7 @@
 
       grid.innerHTML = '';
       newsData.forEach((item, idx) => {
-        let imgUrl = item.thumbnail || (item.enclosure && item.enclosure.link) || 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80';
+        const imgUrl = item.thumbnail || 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80';
         grid.innerHTML += `
           <div class="news-card" style="animation-delay: ${idx * 0.1}s; cursor: pointer;" onclick="openNews(${idx})">
             <div class="news-card__img-container">
