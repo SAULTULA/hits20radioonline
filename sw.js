@@ -1,4 +1,4 @@
-const CACHE_NAME = 'radio-hits2o-v4';
+const CACHE_NAME = 'radio-hits2o-v5';
 const urlsToCache = [
   './index.html',
   './styles.css',
@@ -28,14 +28,13 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Ignorar peticiones externas: audio stream, proxy CORS de noticias y APIs de terceros
-  const externalDomains = ['condoristream.com', 'radiosmundiales.com', 'allorigins.win', 'flagcdn.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
-  if (externalDomains.some(domain => event.request.url.includes(domain))) {
+  // REGLA ÚNICA: ignorar CUALQUIER request cross-origin.
+  // El SW solo cachea recursos del propio sitio. Nunca intercepta APIs externas.
+  if (!event.request.url.startsWith(self.location.origin)) {
     return;
   }
 
-  // Para el HTML (navegación), intentamos ir a la red primero para siempre tener la última versión,
-  // y si falla (sin internet), recurrimos a la caché.
+  // Para navegación (HTML), red primero → caché como fallback offline.
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request))
@@ -43,11 +42,9 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Para el resto (CSS, imágenes, JS), usamos Caché primero, y si no está, vamos a la red.
+  // Para assets locales (CSS, imágenes, JS): caché primero → red si no está.
   event.respondWith(
     caches.match(event.request)
-      .then(response => {
-        return response || fetch(event.request);
-      })
+      .then(response => response || fetch(event.request))
   );
 });
