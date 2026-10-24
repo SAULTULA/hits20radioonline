@@ -313,6 +313,8 @@
     });
 
     let newsData = [];
+
+    // ─── FALLBACK: proxies CORS de terceros (sólo si /api/noticias falla) ─────
     const sourceNames = {
       'minutouno.com': 'Minuto Uno',
       'clarin.com': 'Clarín',
@@ -329,7 +331,6 @@
       return 'Noticias';
     }
 
-    // Parsea un XML de RSS y devuelve array de items
     function parseRSS(xmlText) {
       try {
         const parser = new DOMParser();
@@ -340,78 +341,50 @@
           const mediaEl = item.querySelector('thumbnail') || item.querySelector('content');
           const thumbnail =
             (enclosureEl && enclosureEl.getAttribute('url')) ||
-            (mediaEl && (mediaEl.getAttribute('url') || mediaEl.textContent)) ||
-            '';
+            (mediaEl && (mediaEl.getAttribute('url') || mediaEl.textContent)) || '';
           return {
             title: item.querySelector('title')?.textContent?.trim() || 'Sin título',
             link: item.querySelector('link')?.textContent?.trim() || '#',
             thumbnail,
-            pubDate: item.querySelector('pubDate')?.textContent?.trim() || ''
+            pubDate: item.querySelector('pubDate')?.textContent?.trim() || '',
+            _sourceName: 'Noticias'
           };
         }).filter(item => item.title && item.link && item.link !== '#');
-      } catch (e) {
-        return [];
-      }
+      } catch (e) { return []; }
     }
 
-    // Sistema de proxies RSS en cascada — 4 estrategias, sin corsproxy.io que bloquea desde GH Pages
-    // Estrategia 1: allorigins (JSON → .contents = XML string)
     async function tryAllOrigins(rssUrl) {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 8000);
       try {
-        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`, { signal: controller.signal });
-        clearTimeout(timeout);
+        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`, { signal: ctrl.signal });
+        clearTimeout(t);
         if (!res.ok) return [];
         const json = await res.json();
-        return json.contents ? parseRSS(json.contents) : [];
-      } catch (e) { clearTimeout(timeout); return []; }
+        return json.contents ? parseRSS(json.contents).map(i => ({ ...i, _sourceName: getSourceName(rssUrl) })) : [];
+      } catch (e) { clearTimeout(t); return []; }
     }
 
-    // Estrategia 2: rss2json (API dedicada a RSS → devuelve items JSON directamente)
-    async function tryRss2Json(rssUrl) {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
-      try {
-        const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=5`, { signal: controller.signal });
-        clearTimeout(timeout);
-        if (!res.ok) return [];
-        const json = await res.json();
-        if (json.status !== 'ok' || !json.items) return [];
-        return json.items.map(item => ({
-          title: item.title?.trim() || 'Sin título',
-          link: item.link || '#',
-          thumbnail: item.thumbnail || item.enclosure?.link || '',
-          pubDate: item.pubDate || ''
-        })).filter(item => item.title && item.link && item.link !== '#');
-      } catch (e) { clearTimeout(timeout); return []; }
-    }
-
-    // Estrategia 3: codetabs (proxy HTTP directo → devuelve XML crudo)
     async function tryCodeTabs(rssUrl) {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 8000);
       try {
-        const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rssUrl)}`, { signal: controller.signal });
-        clearTimeout(timeout);
+        const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rssUrl)}`, { signal: ctrl.signal });
+        clearTimeout(t);
         if (!res.ok) return [];
-        const text = await res.text();
-        return parseRSS(text);
-      } catch (e) { clearTimeout(timeout); return []; }
+        return parseRSS(await res.text()).map(i => ({ ...i, _sourceName: getSourceName(rssUrl) }));
+      } catch (e) { clearTimeout(t); return []; }
     }
 
-    async function fetchRSS(rssUrl) {
-      // Intenta cada estrategia en orden hasta obtener items
-      const strategies = [tryAllOrigins, tryRss2Json, tryCodeTabs];
-      for (const strategy of strategies) {
+    async function fetchRSSFallback(rssUrl) {
+      for (const strategy of [tryAllOrigins, tryCodeTabs]) {
         const items = await strategy(rssUrl);
         if (items.length > 0) return items;
       }
       return [];
     }
 
-    async function cargarNoticias() {
-      const grid = document.getElementById('news-grid');
+    async function cargarNoticiasFallback() {
       const sources = [
         'https://www.minutouno.com/rss.xml',
         'https://www.clarin.com/rss/lo-ultimo/',
@@ -420,63 +393,77 @@
         'https://elchorrillero.com/feed/',
         'https://agenciasanluis.com/feed/'
       ];
+      const results = await Promise.all(sources.map(url => fetchRSSFallback(url)));
+      let items = [];
+      results.forEach(r => r.slice(0, 2).forEach(i => items.push(i)));
+      return items.sort(() => Math.random() - 0.5).slice(0, 6);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
-      grid.innerHTML = '<p style="color: var(--color-text-secondary)">Sintonizando noticias del mundo...</p>';
-      newsData = [];
-
-      // Fetch todas las fuentes en paralelo via proxy CORS
-      const results = await Promise.all(
-        sources.map(async url => {
-          const items = await fetchRSS(url);
-          return { url, items };
-        })
-      );
-
-      const working = results.filter(({ items }) => items.length > 0);
-      const failed = results.filter(({ items }) => items.length === 0);
-
-      if (working.length === 0) {
-        grid.innerHTML = '<p style="color:red">No se pudieron cargar las noticias. Intenta de nuevo más tarde.</p>';
-        return;
-      }
-
-      // Primero: 2 noticias de cada fuente que respondió
-      working.forEach(({ url, items }) => {
-        items.slice(0, 2).forEach(item => {
-          newsData.push({ ...item, _sourceName: getSourceName(url) });
-        });
-      });
-
-      // Si alguna fuente falló, rellena con más noticias de las que sí funcionan
-      if (failed.length > 0) {
-        const extras = [];
-        working.forEach(({ url, items }) => {
-          items.slice(2, 4).forEach(item => {
-            extras.push({ ...item, _sourceName: getSourceName(url) });
-          });
-        });
-        const needed = failed.length * 2;
-        extras.slice(0, needed).forEach(item => newsData.push(item));
-      }
-
-      // Mezclar para no mostrar siempre el mismo orden
-      newsData = newsData.sort(() => Math.random() - 0.5).slice(0, 6);
-
+    /**
+     * Renderiza las tarjetas de noticias en el grid.
+     */
+    function renderNoticias(items) {
+      const grid = document.getElementById('news-grid');
+      const FALLBACK_IMG = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80';
       grid.innerHTML = '';
-      newsData.forEach((item, idx) => {
-        const imgUrl = item.thumbnail || 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80';
+      items.forEach((item, idx) => {
+        const imgUrl = item.thumbnail || FALLBACK_IMG;
+        const src = item._sourceName || item.sourceName || 'Noticias';
         grid.innerHTML += `
-          <div class="news-card" style="animation-delay: ${idx * 0.1}s; cursor: pointer;" onclick="openNews(${idx})">
+          <div class="news-card" style="animation-delay:${idx * 0.1}s;cursor:pointer;" onclick="openNews(${idx})">
             <div class="news-card__img-container">
-              <img src="${imgUrl}" alt="Noticia" class="news-card__image" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1585829365295-ab7cd400c167?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80'">
+              <img src="${imgUrl}" alt="Noticia" class="news-card__image" loading="lazy"
+                onerror="this.src='${FALLBACK_IMG}'">
               <div class="news-card__overlay">Leer más</div>
             </div>
             <div class="news-card__content">
-              <span style="font-size:0.65rem; color:var(--color-primary); font-weight:700; text-transform:uppercase; letter-spacing:1px;">${item._sourceName}</span>
+              <span style="font-size:0.65rem;color:var(--color-primary);font-weight:700;text-transform:uppercase;letter-spacing:1px;">${src}</span>
               <h3 class="news-card__title">${item.title}</h3>
             </div>
           </div>`;
       });
+    }
+
+    /**
+     * Punto de entrada del sistema de noticias.
+     * 1º intenta /api/noticias (Vercel Serverless + rss-parser, sin límites de terceros).
+     * Si falla, cae a los proxies CORS de terceros como último recurso.
+     */
+    async function cargarNoticias() {
+      const grid = document.getElementById('news-grid');
+      grid.innerHTML = '<p style="color:var(--color-text-secondary)">Sintonizando noticias del mundo...</p>';
+      newsData = [];
+
+      // ── ESTRATEGIA PRIMARIA: endpoint propio en Vercel ──────────────────────
+      try {
+        const ctrl = new AbortController();
+        const timeout = setTimeout(() => ctrl.abort(), 12000);
+        const res = await fetch('/api/noticias', { signal: ctrl.signal });
+        clearTimeout(timeout);
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.ok && data.items && data.items.length > 0) {
+            newsData = data.items;
+            renderNoticias(newsData);
+            return; // Éxito → no necesita fallback
+          }
+        }
+      } catch (err) {
+        console.warn('[noticias] /api/noticias no disponible, usando fallback:', err.message);
+      }
+
+      // ── ESTRATEGIA FALLBACK: proxies CORS de terceros ───────────────────────
+      console.info('[noticias] Usando proxies CORS de terceros como fallback...');
+      newsData = await cargarNoticiasFallback();
+
+      if (newsData.length === 0) {
+        grid.innerHTML = '<p style="color:red">No se pudieron cargar las noticias. Intenta de nuevo más tarde.</p>';
+        return;
+      }
+
+      renderNoticias(newsData);
     }
     cargarNoticias();
 

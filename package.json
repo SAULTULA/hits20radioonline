@@ -1,0 +1,12 @@
+{
+  "name": "hits20-radio-online",
+  "version": "1.0.0",
+  "description": "Hits20 Radio Online — Serverless RSS parser para Vercel",
+  "private": true,
+  "dependencies": {
+    "rss-parser": "^3.13.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
