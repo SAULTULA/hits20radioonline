@@ -462,6 +462,46 @@ body {
   overflow: hidden;
 }
 
+/* PUBLICIDAD */
+.ad-banner {
+  width: 100%;
+  margin-bottom: var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+}
+
+.ad-banner img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.ad-card {
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+  padding: 6px;
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.ad-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: calc(var(--border-radius-md) - 6px);
+}
+
+@media (max-width: 600px) {
+  .ad-banner {
+    margin-bottom: var(--spacing-md);
+  }
+}
+
 /* SIDEBAR WIDGETS */
 .sidebar {
   display: flex;
