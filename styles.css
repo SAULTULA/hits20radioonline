@@ -103,9 +103,306 @@ body {
 .main-logo-container {
   display: flex;
   justify-content: center;
+  align-items: center;
   margin-bottom: -20px; /* Reduced to pull player closer */
   width: 100%;
   position: relative;
+}
+
+/* ==========================================================================
+   BOTÓN FLOTANTE TRANSMISIÓN RALLY (CARD 30px x 30px)
+   ========================================================================== */
+.rally-floating {
+  position: absolute;
+  right: 0.5rem;
+  top: -12px;
+  z-index: 25;
+  animation: rally-float 3.5s ease-in-out infinite;
+}
+
+@keyframes rally-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.rally-floating__btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 0.35rem 0.85rem 0.35rem 0.35rem;
+  background: var(--color-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 0, 85, 0.4);
+  border-radius: var(--border-radius-full);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-base);
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 0, 85, 0.25);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.rally-floating__btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  border-color: var(--color-primary);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 0, 85, 0.5);
+}
+
+.rally-floating__btn:active {
+  transform: scale(0.98);
+}
+
+/* Card exacta de 30px x 30px que contiene el logo */
+.rally-floating__card {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
+  max-width: 30px;
+  max-height: 30px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, rgba(255, 0, 85, 0.35), rgba(255, 20, 50, 0.45));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--border-radius-sm);
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.rally-floating__logo {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+.rally-floating__pulse {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--border-radius-full);
+  background-color: var(--color-primary);
+  box-shadow: 0 0 8px var(--color-primary);
+  animation: pulse-dot 1.5s infinite;
+}
+
+.rally-floating__content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 2px;
+}
+
+.rally-floating__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--color-primary);
+}
+
+.rally-floating__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--border-radius-full);
+  background: var(--color-primary);
+  box-shadow: 0 0 6px var(--color-primary);
+  animation: pulse-dot 1.5s infinite;
+}
+
+.rally-floating__text {
+  font-size: clamp(0.72rem, 1.4vw, 0.82rem);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+  max-width: 190px;
+}
+
+@media (max-width: 960px) {
+  .main-logo-container {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: 0;
+  }
+  .rally-floating {
+    position: static;
+    transform: none;
+    margin-bottom: var(--spacing-xs);
+    animation: rally-float-mobile 3s ease-in-out infinite;
+  }
+  .rally-floating__text {
+    max-width: none;
+  }
+}
+
+@keyframes rally-float-mobile {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* ==========================================================================
+   RALLY MODAL (VENTANA EMERGENTE EN LA MISMA WEB)
+   ========================================================================== */
+body.modal-open {
+  overflow: hidden;
+}
+
+.rally-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm);
+}
+
+.rally-modal.rally-modal--active {
+  display: flex;
+}
+
+.rally-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 5, 10, 0.84);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: modal-fade-in 0.25s ease-out;
+}
+
+.rally-modal__dialog {
+  position: relative;
+  z-index: 2;
+  width: min(1080px, 95vw);
+  height: min(680px, 86vh);
+  display: flex;
+  flex-direction: column;
+  background: rgba(16, 16, 24, 0.96);
+  border: 1px solid rgba(255, 0, 85, 0.4);
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 35px rgba(255, 0, 85, 0.25);
+  overflow: hidden;
+  animation: modal-pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rally-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.rally-modal__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.rally-modal__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 0, 85, 0.15);
+  border: 1px solid rgba(255, 0, 85, 0.4);
+  border-radius: var(--border-radius-full);
+  padding: 3px 8px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--color-primary);
+}
+
+.rally-modal__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--border-radius-full);
+  background: var(--color-primary);
+  box-shadow: 0 0 6px var(--color-primary);
+  animation: pulse-dot 1.5s infinite;
+}
+
+.rally-modal__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.rally-modal__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.rally-modal__action-btn,
+.rally-modal__close {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--border-radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.rally-modal__action-btn:hover,
+.rally-modal__close:hover {
+  background: rgba(255, 0, 85, 0.2);
+  border-color: var(--color-primary);
+  transform: scale(1.05);
+}
+
+.rally-modal__body {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: #000;
+  overflow: hidden;
+}
+
+.rally-modal__iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 /* Efecto de niebla removido por problemas de rendimiento en móviles */
